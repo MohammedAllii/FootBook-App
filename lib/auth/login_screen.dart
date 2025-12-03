@@ -4,6 +4,7 @@ import 'package:cherry_toast/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:footbookcamp/Home/HomeScreen.dart';
+import 'package:footbookcamp/Services/AuthService.dart';
 import 'package:get/get.dart';
 
 class BottomWaveClipper extends CustomClipper<Path> {
@@ -27,6 +28,8 @@ class BottomWaveClipper extends CustomClipper<Path> {
 }
 
 class LoginScreen extends StatefulWidget {
+  const LoginScreen({Key? key}) : super(key: key);
+
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
@@ -34,6 +37,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
 
   void _login() async {
@@ -53,11 +57,39 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
 
-    // logica login qui
+    try {
+      final response = await _authService.login(email, password);
 
-    setState(() {
-      _isLoading = false;
-    });
+      if (response['access_token'] != null) {
+        CherryToast.success(
+          title: const Text("Login avvenuto con successo"),
+          displayIcon: true,
+          animationType: AnimationType.fromLeft,
+        ).show(context);
+
+        // Naviguer vers HomeScreen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
+        CherryToast.error(
+          title: Text("Errore durante il login"),
+          displayIcon: true,
+          animationType: AnimationType.fromLeft,
+        ).show(context);
+      }
+    } catch (e) {
+      CherryToast.error(
+        title: Text("Errore Errore durante il login"),
+        displayIcon: true,
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -92,9 +124,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-            Text(
+            const Text(
               "Accedi",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF44a4a4),
@@ -134,7 +166,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "Email",
-                                hintStyle: TextStyle(color: Colors.grey[700]),
+                                hintStyle:
+                                    TextStyle(color: Colors.grey[700]),
                               ),
                             ),
                           ),
@@ -146,7 +179,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 border: InputBorder.none,
                                 hintText: "Password",
-                                hintStyle: TextStyle(color: Colors.grey[700]),
+                                hintStyle:
+                                    TextStyle(color: Colors.grey[700]),
                               ),
                             ),
                           ),
@@ -158,15 +192,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   FadeInUp(
                     duration: const Duration(milliseconds: 1900),
                     child: GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
-                          ),
-                        );
-                        // _login();
-                      },
+                      onTap: _login,
                       child: Container(
                         height: 50,
                         decoration: BoxDecoration(

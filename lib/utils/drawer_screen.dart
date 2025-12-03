@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:footbookcamp/Home/HomeScreen.dart';
+import 'package:footbookcamp/Services/AuthService.dart';
+import 'package:footbookcamp/auth/login_screen.dart';
+import 'package:cherry_toast/cherry_toast.dart';
+import 'package:cherry_toast/resources/arrays.dart';
 
 class DrawerScreen extends StatefulWidget {
   final int selectedIndex;
@@ -11,11 +15,58 @@ class DrawerScreen extends StatefulWidget {
 }
 
 class _DrawerScreenState extends State<DrawerScreen> {
+  final AuthService _authService = AuthService();
+
   String userName = "Caricamento...";
+  String userEmail = "";
+  String userFullName = "";
 
   @override
   void initState() {
     super.initState();
+    _loadUserData();
+  }
+
+  // Récupérer les infos utilisateur
+  void _loadUserData() async {
+    try {
+      final userData = await _authService.getUser();
+      setState(() {
+        userFullName = "${userData['nome']} ${userData['cognome']}";
+        userEmail = userData['email'] ?? "";
+        userName = userData['nome'] ?? "Utente";
+      });
+    } catch (e) {
+      setState(() {
+        userName = "Utente";
+        userEmail = "";
+      });
+      print("Errore nel caricamento utente: $e");
+    }
+  }
+
+  void _logout() async {
+    try {
+      await _authService.logout();
+      CherryToast.success(
+        title: const Text("Logout avvenuto con successo"),
+        displayIcon: true,
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+
+      // Redirection vers LoginScreen
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      CherryToast.error(
+        title: Text("Errore durante il logout: $e"),
+        displayIcon: true,
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+    }
   }
 
   @override
@@ -74,13 +125,27 @@ class _DrawerScreenState extends State<DrawerScreen> {
                       ),
                     ),
                     const SizedBox(width: 15),
-                    const Text(
-                      "Ciao, Hamouda!",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 20,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            userFullName.isNotEmpty ? userFullName : "Utente",
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            userEmail.isNotEmpty ? userEmail : "",
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -96,7 +161,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => HomeScreen()),
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
                   );
                 },
               ),
@@ -132,7 +197,7 @@ class _DrawerScreenState extends State<DrawerScreen> {
                 icon: Icons.logout,
                 title: "Disconnetti",
                 color: Colors.red,
-                onTap: () {},
+                onTap: _logout,
               ),
 
               const SizedBox(height: 20),

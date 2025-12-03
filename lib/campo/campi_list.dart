@@ -39,7 +39,7 @@ final List<Map<String, dynamic>> _campi = [
 ];
 
 final List<Map<String, String>> _categorie = [
-  {"nome": "Tutti", "immagine": "assets/categories/all.png"}, // catégorie All
+  {"nome": "Tutti", "immagine": "assets/categories/all.png"}, 
   {"nome": "Calcio a 5", "immagine": "assets/categories/calcio5.jpg"},
   {"nome": "Calcio a 7", "immagine": "assets/categories/calcio7.jpg"},
   {"nome": "Calcio a 11", "immagine": "assets/categories/calcio11.png"},
