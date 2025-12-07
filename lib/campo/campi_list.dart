@@ -124,12 +124,6 @@ class _CampiListState extends State<CampiList> {
                         final campo = campiFiltrati[index];
                         return GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => DetailsCampo(),
-                              ),
-                            );
                           },
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 16.0),

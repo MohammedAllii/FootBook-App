@@ -4,14 +4,16 @@ import 'package:cherry_toast/cherry_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:footbookcamp/campo/booking_page.dart';
+import 'package:footbookcamp/Model/campi_model.dart'; // Assurez-vous que le chemin est correct
+import 'package:footbookcamp/campo/booking_page.dart'; // Assurez-vous que le chemin est correct
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as ll;
 
-
 class DetailsCampo extends StatefulWidget {
-  const DetailsCampo({Key? key}) : super(key: key);
+  final Campo campo;
+
+  const DetailsCampo({Key? key, required this.campo}) : super(key: key);
 
   @override
   _DetailsCampoState createState() => _DetailsCampoState();
@@ -20,14 +22,17 @@ class DetailsCampo extends StatefulWidget {
 class _DetailsCampoState extends State<DetailsCampo>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController(viewportFraction: 0.95);
-  int _currentPage = 2;
+  int _currentPage = 0; // Commencer à 0, car les images sont dynamiques
   Timer? _carouselTimer;
 
   late final TabController _tabController;
 
-  double _rating = 4.0;
+  // Utilisation de la note du Campo
+  late double _rating; 
   final TextEditingController _commentController = TextEditingController();
 
+  // Les commentaires et événements restent statiques pour cet exemple, 
+  // car le modèle 'Campo' ne les contient pas.
   final List<Map<String, dynamic>> _comments = [
     {
       "name": "Marco",
@@ -56,33 +61,35 @@ class _DetailsCampoState extends State<DetailsCampo>
     },
   ];
 
-static const _campoLatLng = ll.LatLng(41.902782, 12.496366);
-  final Set<Marker> _markers = {};
-
-  final List<String> _images = [
-    'assets/stadium1.jpg',
-    'assets/stadium.jpg',
-    'assets/stadium2.jpg',
-  ];
+  // Les coordonnées sont maintenant dynamiques
+  late final ll.LatLng _campoLatLng;
+  
+  // Les images sont maintenant dynamiques
+  late final List<String> _images;
 
   @override
   void initState() {
     super.initState();
 
+    _rating = widget.campo.recensione;
+    _campoLatLng = ll.LatLng(widget.campo.latitude, widget.campo.longitude);
+    _images = widget.campo.foto;
+
     _tabController = TabController(length: 4, vsync: this);
 
-
-
-    _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
-      if (_pageController.hasClients) {
-        final next = (_currentPage + 1) % _images.length;
-        _pageController.animateToPage(
-          next,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-        );
-      }
-    });
+    // Initialisation du carrousel avec les images dynamiques
+    if (_images.isNotEmpty) {
+      _carouselTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+        if (_pageController.hasClients) {
+          final next = (_currentPage + 1) % _images.length;
+          _pageController.animateToPage(
+            next,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
   }
 
   @override
@@ -94,23 +101,20 @@ static const _campoLatLng = ll.LatLng(41.902782, 12.496366);
     super.dispose();
   }
 
-Future<void> _launchPhoneDialer(String phoneNumber) async {
-  final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+  Future<void> _launchPhoneDialer(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
 
-  try {
-    await launchUrl(
-      phoneUri,
-      mode: LaunchMode.externalApplication,
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nessuna app telefono trovata")),
-    );
+    try {
+      await launchUrl(
+        phoneUri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Nessuna app telefono trovata")),
+      );
+    }
   }
-}
-
-
-
 
   Future<void> _openMaps(double lat, double lng) async {
     final Uri google = Uri.parse('google.navigation:q=$lat,$lng&mode=d');
@@ -135,59 +139,58 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-  backgroundColor: const Color(0xFFF6F8F7),
-  body: SafeArea(
-    child: Column(
-      children: [
-        Expanded(
-          flex: isLandscape ? 5 : 3,   // ratio intelligent
-          child: !isLandscape
-              ? _buildTopPortrait(screenHeight)
-              : _buildTopLandscape(screenWidth, screenHeight),
-        ),
-
-        Expanded(
-          flex: 7,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+      backgroundColor: const Color(0xFFF6F8F7),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              flex: isLandscape ? 5 : 3,
+              child: !isLandscape
+                  ? _buildTopPortrait(screenHeight)
+                  : _buildTopLandscape(screenWidth, screenHeight),
             ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 12,
-                  offset: Offset(0, -6),
+            Expanded(
+              flex: 7,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-              ],
-            ),
-            child: Column(
-              children: [
-                _buildTitleSection(),
-                const SizedBox(height: 12),
-                _buildTabBar(),
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _tabInfo(),
-                      _tabContact(),
-                      _tabReviews(),
-                      _tabMap(),
-                    ],
-                  ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius:
+                      BorderRadius.vertical(top: Radius.circular(28)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 12,
+                      offset: Offset(0, -6),
+                    ),
+                  ],
                 ),
-              ],
+                child: Column(
+                  children: [
+                    _buildTitleSection(),
+                    const SizedBox(height: 12),
+                    _buildTabBar(),
+                    Expanded(
+                      child: TabBarView(
+                        controller: _tabController,
+                        children: [
+                          _tabInfo(),
+                          _tabContact(),
+                          _tabReviews(),
+                          _tabMap(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-      ],
-    ),
-  ),
-
+      ),
     );
   }
 
@@ -205,19 +208,24 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
             itemCount: _images.length,
             onPageChanged: (i) => setState(() => _currentPage = i),
             itemBuilder: (context, index) {
+              // Utilise AssetImage si l'image est un asset local
+              final ImageProvider imageProvider = 
+                  _images[index].startsWith('assets/')
+                      ? AssetImage(_images[index]) as ImageProvider
+                      : NetworkImage(_images[index]);
+
               return Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(18),
                   image: DecorationImage(
-                    image: AssetImage(_images[index]),
+                    image: imageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
               );
             },
           ),
-
           Positioned(
             bottom: 12,
             left: 0,
@@ -257,12 +265,17 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
                 itemCount: _images.length,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
+                  final ImageProvider imageProvider = 
+                      _images[index].startsWith('assets/')
+                          ? AssetImage(_images[index]) as ImageProvider
+                          : NetworkImage(_images[index]);
+
                   return Container(
                     margin: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(14),
                       image: DecorationImage(
-                        image: AssetImage(_images[index]),
+                        image: imageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -274,38 +287,44 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
           Expanded(
             flex: 4,
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Campo Sportivo GreenPark',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  Text(
+                    // Nom dynamique
+                    widget.campo.nome,
+                    style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Struttura moderna, ideale per tornei e allenamenti.',
-                    style: TextStyle(fontSize: 14),
+                  Text(
+                    // Description dynamique
+                    widget.campo.descrizione,
+                    style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 18),
                   Row(
-                    children: const [
-                      Icon(Icons.location_on, color: Colors.green),
-                      SizedBox(width: 6),
-                      Expanded(child: Text('Via Roma 123, 00100 Roma')),
+                    children: [
+                      const Icon(Icons.location_on, color: Colors.green),
+                      const SizedBox(width: 6),
+                      // Localité dynamique
+                      Expanded(child: Text(widget.campo.localita)),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       RatingBarIndicator(
+                        // Note dynamique
                         rating: _rating,
-                        itemBuilder:
-                            (_, __) =>
-                                const Icon(Icons.star, color: Colors.amber),
+                        itemBuilder: (_, __) => const Icon(Icons.star,
+                            color: Colors.amber),
                         itemSize: 20,
                       ),
                       const SizedBox(width: 8),
+                      // Affichage de la note dynamique
                       Text(_rating.toStringAsFixed(1)),
                     ],
                   ),
@@ -327,10 +346,11 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
             color: Colors.black,
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Center(
+          child: Center(
             child: Text(
-              'Campo Sportivo GreenPark',
-              style: TextStyle(
+              // Nom dynamique
+              widget.campo.nome,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
@@ -370,110 +390,103 @@ Future<void> _launchPhoneDialer(String phoneNumber) async {
   // TAB INFO
   // ----------------------------------------------------
   Widget _tabInfo() {
-  return SingleChildScrollView(
-    padding: const EdgeInsets.all(12),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          "Descrizione",
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          "Il Campo Sportivo GreenPark offre una struttura moderna, ideale per calcio, paddle e attività sportive.",
-        ),
-        const SizedBox(height: 16),
-        const Text("Servizi", style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-Wrap(
-  spacing: 6,
-  runSpacing: 9,
-  children: [
-    _buildFeatureChip("Luci Notturne"),
-    _buildFeatureChip("Spogliatoi"),
-    _buildFeatureChip("Bar"),
-    _buildFeatureChip("Parcheggio"),
-  ],
-),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Descrizione",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            // Description dynamique
+            widget.campo.descrizione,
+          ),
+          const SizedBox(height: 16),
+          const Text("Servizi", style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 9,
+            // Services dynamiques
+            children: widget.campo.servizi
+                .map((servizio) => _buildFeatureChip(servizio))
+                .toList(),
+          ),
+          const SizedBox(height: 40),
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.black),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    spreadRadius: 2,
+                    blurRadius: 40,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => BookingPage()),
+                  );
+                },
+                icon: const Icon(Icons.calendar_month, color: Colors.black),
+                label: const Text(
+                  'Prenota Ora',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-
-
-        const SizedBox(height: 40),
-
-SizedBox(
-  width: double.infinity,
-  child: Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.black), // bord noir
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          spreadRadius: 2,
-          blurRadius: 40,
-          offset: const Offset(0, 3), // ombre vers le bas
-        ),
-      ],
-    ),
-    child: ElevatedButton.icon(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => BookingPage()),
-        );
-      },
-      icon: const Icon(Icons.calendar_month, color: Colors.black),
-      label: const Text(
-        'Prenota Ora',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
+  Widget _buildFeatureChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.black),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
           color: Colors.black,
+          fontWeight: FontWeight.bold,
         ),
       ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 0, // supprime l’ombre par défaut
-      ),
-    ),
-  ),
-),
-
-      ],
-    ),
-  );
-}
-
-Widget _buildFeatureChip(String label) {
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.black),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          blurRadius: 5,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    ),
-    child: Text(
-      label,
-      style: const TextStyle(
-        color: Colors.black,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
-}
-
+    );
+  }
 
   // ----------------------------------------------------
   // TAB CONTACT
@@ -490,14 +503,20 @@ Widget _buildFeatureChip(String label) {
             color: Colors.white,
             elevation: 6,
             child: ListTile(
-              leading: const Icon(Icons.email,color: Colors.black,),              
-              title: const Text("Email",style: TextStyle(color: Colors.black,fontWeight: FontWeight.bold)),
-              subtitle: const Text("greenparkcampo@gmail.com",style: TextStyle(color: Colors.black)),
+              leading: const Icon(
+                Icons.email,
+                color: Colors.black,
+              ),
+              title: const Text("Email",
+                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              // Email dynamique
+              subtitle: Text(widget.campo.email,
+                  style: const TextStyle(color: Colors.black)),
               trailing: IconButton(
                 icon: const Icon(Icons.copy),
                 onPressed: () {
                   Clipboard.setData(
-                    const ClipboardData(text: 'greenparkcampo@gmail.com'),
+                    ClipboardData(text: widget.campo.email),
                   );
                   CherryToast.info(
                     title: const Text('Email copiata!'),
@@ -506,39 +525,39 @@ Widget _buildFeatureChip(String label) {
               ),
             ),
           ),
-
           const SizedBox(height: 12),
-
-Card(
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.circular(12),
-  ),
-  color: Colors.white,
-  elevation: 6,
-  child: ListTile(
-    leading: Icon(Icons.phone, color: Colors.black),
-    title: const Text(
-      "Telefono",
-      style: TextStyle(
-        color: Colors.black,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    subtitle: const Text("+39 345 678 9012"),
-    trailing: ElevatedButton.icon(
-      onPressed: () => _launchPhoneDialer('+393456789012'),
-      icon: const Icon(Icons.call, color: Colors.black),
-      label: const Text(""),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Color.fromARGB(255, 148, 211, 137),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-      ),
-    ),
-  ),
-),
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            color: Colors.white,
+            elevation: 6,
+            child: ListTile(
+              leading: const Icon(Icons.phone, color: Colors.black),
+              title: const Text(
+                "Telefono",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              // Téléphone dynamique
+              subtitle: Text(widget.campo.telefono),
+              trailing: ElevatedButton.icon(
+                // Appel dynamique
+                onPressed: () => _launchPhoneDialer(widget.campo.telefono),
+                icon: const Icon(Icons.call, color: Colors.black),
+                label: const Text(""),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 148, 211, 137),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -567,36 +586,34 @@ Card(
               ),
             );
           }).toList(),
-
           const SizedBox(height: 10),
           const Text(
             "Aggiungi una recensione:",
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-TextField(
-  controller: _commentController,
-  maxLines: 3,
-  decoration: InputDecoration(
-    hintText: "Scrivi la tua opinione...",
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(15), // <-- ici le border radius
-      borderSide: const BorderSide(color: Colors.black), // couleur de la bordure
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(15),
-      borderSide: const BorderSide(color: Colors.black),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(15),
-      borderSide: const BorderSide(color: Colors.blue), // couleur quand focus
-    ),
-    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-  ),
-),
-
+          TextField(
+            controller: _commentController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: "Scrivi la tua opinione...",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.black),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.black),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: const BorderSide(color: Colors.blue),
+              ),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
           const SizedBox(height: 10),
-
           ElevatedButton.icon(
             onPressed: () {
               if (_commentController.text.trim().isEmpty) {
@@ -619,8 +636,14 @@ TextField(
                 title: const Text('Recensione aggiunta!'),
               ).show(context);
             },
-            icon: const Icon(Icons.send,color: Colors.black,),
-            label: const Text("Invia",style: TextStyle(color: Colors.black),),
+            icon: const Icon(
+              Icons.send,
+              color: Colors.black,
+            ),
+            label: const Text(
+              "Invia",
+              style: TextStyle(color: Colors.black),
+            ),
           ),
         ],
       ),
@@ -630,106 +653,94 @@ TextField(
   // ----------------------------------------------------
   // TAB MAP
   // ----------------------------------------------------
- // ----------------------------------------------------
-// TAB MAP
-// ----------------------------------------------------
-Widget _tabMap() {
-  return Column(
-    children: [
-      Expanded(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: FlutterMap(
-            options: MapOptions(
-              initialCenter: ll.LatLng(
-                _campoLatLng.latitude,
-                _campoLatLng.longitude,
+  Widget _tabMap() {
+    return Column(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: FlutterMap(
+              options: MapOptions(
+                // Centre initial dynamique
+                initialCenter: _campoLatLng,
+                initialZoom: 15,
               ),
-              initialZoom: 15,
-            ),
-            children: [
-TileLayer(
-  urlTemplate:
-    "https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=v8rM3KA53qUGAkt9eBdk",
-  userAgentPackageName: 'com.hamouda.footbook',
-),
-
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: ll.LatLng(
-                        _campoLatLng.latitude, _campoLatLng.longitude),
-                    width: 40,
-                    height: 40,
-                    child: const Icon(
-                      Icons.location_on,
-                      size: 40,
-                      color: Colors.red,
+              children: [
+                TileLayer(
+                  urlTemplate:
+                      "https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=v8rM3KA53qUGAkt9eBdk",
+                  userAgentPackageName: 'com.hamouda.footbook',
+                ),
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      // Position du marqueur dynamique
+                      point: _campoLatLng,
+                      width: 40,
+                      height: 40,
+                      child: const Icon(
+                        Icons.location_on,
+                        size: 40,
+                        color: Colors.red,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-
-              // REQUIRED BY OSM
-              RichAttributionWidget(
-                attributions: [
-                  TextSourceAttribution(
-                    '© OpenStreetMap contributors',
-                    onTap: null,
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+                // REQUIRED BY OSM
+                RichAttributionWidget(
+                  attributions: [
+                    const TextSourceAttribution(
+                      '© OpenStreetMap contributors',
+                      onTap: null,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-
-      const SizedBox(height: 10),
-
-SizedBox(
-  width: double.infinity,
-  child: Container(
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.black),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.2),
-          spreadRadius: 4,
-          blurRadius: 10,
-          offset: const Offset(12, 0), 
+        const SizedBox(height: 10),
+        SizedBox(
+          width: double.infinity,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.black),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  spreadRadius: 4,
+                  blurRadius: 10,
+                  offset: const Offset(12, 0),
+                ),
+              ],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                // Ouverture de la carte dynamique
+                _openMaps(
+                  _campoLatLng.latitude,
+                  _campoLatLng.longitude,
+                );
+              },
+              icon: const Icon(Icons.directions),
+              label: const Text(
+                "Itinéraire",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
         ),
       ],
-    ),
-    child: ElevatedButton.icon(
-      onPressed: () {
-        _openMaps(
-          _campoLatLng.latitude,
-          _campoLatLng.longitude,
-        );
-      },
-      icon: const Icon(Icons.directions),
-      label: const Text(
-        "Itinéraire",
-        style: TextStyle(fontWeight: FontWeight.bold),
-      ),
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 0, // on supprime l'ombre par défaut de l’ElevatedButton
-      ),
-    ),
-  ),
-),
-
-    ],
-  );
-}
-
-
-
+    );
+  }
 }

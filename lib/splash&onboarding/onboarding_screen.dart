@@ -1,8 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_onboarding_slider/flutter_onboarding_slider.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:footbookcamp/Home/HomeScreen.dart';
+import 'package:footbookcamp/Services/AuthService.dart';
 import 'package:footbookcamp/auth/welcome_screen.dart';
 import 'package:get/get.dart';
 
@@ -14,14 +13,24 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final FlutterSecureStorage storage = const FlutterSecureStorage();
+  final AuthService _authService = AuthService(); 
 
   @override
   Widget build(BuildContext context) {
     return OnBoardingSlider(
       finishButtonText: "Inizia ora",
-      onFinish: () {
-        Get.offAll(() =>  WelcomeScreen());
+      onFinish: () async {
+await _authService.setOnboardingComplete(); 
+// 2. Vérifier si l'utilisateur est déjà connecté (si un jeton existe)
+final bool loggedIn = await _authService.isUserLoggedIn();
+
+if (loggedIn) {
+ // Si connecté, naviguer directement vers HomeScreen
+Get.offAll(() => const HomeScreen());
+} else {
+ // Sinon, naviguer vers WelcomeScreen pour se connecter/s'enregistrer
+ Get.offAll(() =>  WelcomeScreen());
+}
       },
       finishButtonStyle: const FinishButtonStyle(
         backgroundColor: Color.fromARGB(255, 51, 140, 85),
@@ -57,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         Container(),
         Container(),
       ],
-      speed: 10.8,
+      speed: 1.0, // Vitesse réduite pour une meilleure expérience
 
       pageBodies: [
         _buildPageBody(
@@ -93,6 +102,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     required String description,
     required String imagePath,
   }) {
+    // ... (Reste inchangé)
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenHeight = MediaQuery.of(context).size.height;
