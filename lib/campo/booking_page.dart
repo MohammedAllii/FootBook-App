@@ -167,7 +167,7 @@ class _BookingPageState extends State<BookingPage> {
                             builder: (_) => PaymentPage(
                               date: selectedDate,
                               hour: selectedHour!,
-                              price: 25,
+                              price: 25, campiId: 1, userId: 1,
                             ),
                           ),
                         );

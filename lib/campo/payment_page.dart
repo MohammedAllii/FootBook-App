@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class PaymentPage extends StatefulWidget {
+  final int campiId;
+  final int userId;
   final DateTime date;
   final String hour;
   final double price;
 
   PaymentPage({
+    required this.campiId,
+    required this.userId,
     required this.date,
     required this.hour,
     required this.price,
@@ -18,159 +23,104 @@ class PaymentPage extends StatefulWidget {
 }
 
 class _PaymentPageState extends State<PaymentPage> {
-  final TextEditingController cardNumberCtrl = TextEditingController();
-  final TextEditingController cardHolderCtrl = TextEditingController();
-  final TextEditingController expiryCtrl = TextEditingController();
-  final TextEditingController cvvCtrl = TextEditingController();
-
   bool isLoading = false;
 
+  /// 🔵 Fonction principale : créer PaymentIntent → saisir la carte → confirmer paiement
+  Future<void> _startPayment() async {
+    try {
+      setState(() => isLoading = true);
+
+      // 1️⃣ APPEL API Laravel → création PaymentIntent
+      final response = await http.post(
+        Uri.parse("http://10.109.162.110:8000/api/create-payment-intent"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "campi_id": widget.campiId,
+          "user_id": widget.userId,
+          "data": widget.date.toString().substring(0, 10),
+          "ora": widget.hour,
+          "prezzo": widget.price,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode != 200) {
+        throw data["message"] ?? "Erreur backend Laravel";
+      }
+
+      final clientSecret = data["client_secret"];
+
+      // 2️⃣ SAISIE DE CARTE → Stripe PaymentSheet (méthode recommandée 2025)
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: "Football Booking",
+          style: ThemeMode.light,
+        ),
+      );
+
+      // 3️⃣ Ouvrir PaymentSheet Stripe
+      await Stripe.instance.presentPaymentSheet();
+
+      // 4️⃣ SUCCESS
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Paiement réussi ✓"),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erreur : $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  // UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Pagamento"),
-      ),
-      body: SingleChildScrollView(
+      appBar: AppBar(title: Text("Pagamento Stripe")),
+      body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // CARD DESIGN
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Color(0xFF44a4a4).withOpacity(0.9),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("FOOTBOOK CARD",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        letterSpacing: 1.3,
-                      )),
-                  SizedBox(height: 35),
-                  Text(
-                    cardNumberCtrl.text.isEmpty
-                        ? "XXXX XXXX XXXX XXXX"
-                        : cardNumberCtrl.text,
-                    style: TextStyle(
-                        color: Colors.white, fontSize: 22, letterSpacing: 2),
-                  ),
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        cardHolderCtrl.text.isEmpty
-                            ? "NOME TITOLARE"
-                            : cardHolderCtrl.text.toUpperCase(),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      Text(
-                        expiryCtrl.text.isEmpty ? "MM/YY" : expiryCtrl.text,
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // FORM FIELDS
-            Text("Dettagli della carta",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(height: 20),
-
-            TextField(
-              controller: cardNumberCtrl,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Numero Carta",
-                prefixIcon: Icon(Icons.credit_card),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            SizedBox(height: 20),
-
-            TextField(
-              controller: cardHolderCtrl,
-              decoration: InputDecoration(
-                labelText: "Nome Titolare",
-                prefixIcon: Icon(Icons.person),
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
-            SizedBox(height: 20),
-
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: expiryCtrl,
-                    decoration: InputDecoration(
-                      labelText: "Scadenza (MM/YY)",
-                      prefixIcon: Icon(Icons.date_range),
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: cvvCtrl,
-                    obscureText: true,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: "CVV",
-                      prefixIcon: Icon(Icons.lock),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            SizedBox(height: 30),
-
-            // SUMMARY
-            Text("Riepilogo",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
             Text("Data: ${widget.date.toString().substring(0, 10)}"),
             Text("Orario: ${widget.hour}"),
-            Text("Prezzo: ${widget.price.toStringAsFixed(2)} €",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(height: 40),
+            SizedBox(height: 15),
 
-            // PAY BUTTON
+            Text("Prezzo:",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("${widget.price.toStringAsFixed(2)} €",
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+
+            Spacer(),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isLoading ? null : _payWithStripe,
+                onPressed: isLoading ? null : _startPayment,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Color(0xFF44a4a4).withOpacity(0.9),
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15)),
+                  backgroundColor: Colors.green,
+                  padding: EdgeInsets.symmetric(vertical: 15),
                 ),
                 child: isLoading
                     ? CircularProgressIndicator(color: Colors.white)
                     : Text(
-                        "Paga Ora",
+                        "Paga con Stripe",
                         style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
               ),
             ),
@@ -178,55 +128,5 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _payWithStripe() async {
-    if (cardNumberCtrl.text.isEmpty ||
-        cardHolderCtrl.text.isEmpty ||
-        expiryCtrl.text.isEmpty ||
-        cvvCtrl.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Compila tutti i campi")),
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      // Exemple : Appel Laravel backend pour créer un paiement Stripe
-      final response = await http.post(
-        Uri.parse("https://your-laravel-backend.com/api/payment"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "card_number": cardNumberCtrl.text,
-          "card_holder": cardHolderCtrl.text,
-          "expiry": expiryCtrl.text,
-          "cvv": cvvCtrl.text,
-          "amount": widget.price,
-          "date": widget.date.toString(),
-          "hour": widget.hour,
-        }),
-      );
-
-      final result = jsonDecode(response.body);
-
-      if (response.statusCode == 200 && result['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Pagamento completato!")),
-        );
-        Navigator.pop(context);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Errore pagamento: ${result['message']}")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Errore: $e")),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
   }
 }
