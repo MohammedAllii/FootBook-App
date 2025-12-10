@@ -39,6 +39,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
   final TextEditingController _controllerEta = TextEditingController();
+  final TextEditingController _controllerTelefono = TextEditingController();
+   final TextEditingController _controllerIndirizzo = TextEditingController();
 
   final AuthService _authService = AuthService();
 
@@ -50,12 +52,16 @@ class _SignupScreenState extends State<SignupScreen> {
     final email = _controllerEmail.text.trim();
     final password = _controllerPassword.text.trim();
     final eta = _controllerEta.text.trim();
+    final telefono = _controllerTelefono.text.trim();
+    final indirizzo = _controllerIndirizzo.text.trim();
 
     if (nome.isEmpty ||
         cognome.isEmpty ||
         email.isEmpty ||
         password.isEmpty ||
-        eta.isEmpty) {
+        eta.isEmpty||
+        telefono.isEmpty||
+        indirizzo.isEmpty){
       CherryToast.error(
         title: const Text("Per favore, compila tutti i campi"),
         displayIcon: true,
@@ -75,6 +81,8 @@ class _SignupScreenState extends State<SignupScreen> {
         'email': email,
         'password': password,
         'eta': int.tryParse(eta) ?? 18,
+        'telefono': telefono,
+        'indirizzo': indirizzo,
       });
 
       if (response['access_token'] != null) {
@@ -196,6 +204,14 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   buildInputField(_controllerEmail, "Email",
                       keyboardType: TextInputType.emailAddress),
+                  Row(
+                    children: [
+                      Expanded(child: buildInputField(_controllerTelefono, "Telefono")),
+                      const SizedBox(width: 10),
+                      Expanded(
+                          child: buildInputField(_controllerIndirizzo, "Indirizzo")),
+                    ],
+                  ),
                   buildInputField(_controllerPassword, "Password", obscure: true),
                   buildInputField(
                     _controllerEta,

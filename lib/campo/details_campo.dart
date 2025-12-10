@@ -433,10 +433,13 @@ class _DetailsCampoState extends State<DetailsCampo>
               ),
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => BookingPage()),
-                  );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BookingPage(campo: widget.campo),
+                  ),
+                );
+
                 },
                 icon: const Icon(Icons.calendar_month, color: Colors.black),
                 label: const Text(

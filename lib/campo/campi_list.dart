@@ -204,12 +204,6 @@ class _CampiListState extends State<CampiList> {
                                             ),
                                             child: ElevatedButton.icon(
                                               onPressed: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          BookingPage()),
-                                                );
                                               },
                                               icon: const Icon(
                                                   Icons.calendar_today,
