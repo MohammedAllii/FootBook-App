@@ -3,6 +3,8 @@ import 'package:calendar_timeline/calendar_timeline.dart';
 import 'package:footbookcamp/Home/HomeScreen.dart';
 import 'package:footbookcamp/campo/campi_list.dart';
 import 'package:footbookcamp/profile/edit_profile_page.dart';
+import 'package:footbookcamp/Services/reservation_service.dart';
+import 'package:footbookcamp/Model/prenotazione_model.dart';
 import 'package:get/get.dart';
 import 'package:sliding_clipped_nav_bar/sliding_clipped_nav_bar.dart';
 
@@ -17,16 +19,29 @@ class _CalendarPageState extends State<CalendarPage> {
   DateTime _selectedDate = DateTime.now();
   int selectedIndex = 1;
 
-  /// --- EVENTS SUR DIFFÉRENTS JOURS ---
-  final Map<DateTime, List<String>> events = {
-    DateTime(2025, 11, 29): ["Partita amichevole", "Allenamento"],
-    DateTime(2025, 11, 27): ["Torneo 5v5"],
-    DateTime(2025, 11, 27): ["Prenotazione campo"],
-    DateTime(2025, 11, 30): ["Allenamento ragazzi U17"],
-  };
+  final ReservationService _reservationService = ReservationService();
+  List<Prenotazione> _userReservations = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserReservations();
+  }
+
+  void _loadUserReservations() async {
+    final reservations = await _reservationService.getUserReservations(1); 
+    setState(() {
+      _userReservations = reservations;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final eventDates = _userReservations
+        .map((r) => DateTime.parse(r.data))
+        .toSet()
+        .toList();
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -35,128 +50,112 @@ class _CalendarPageState extends State<CalendarPage> {
           style: TextStyle(color: Colors.black),
         ),
       ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            const SizedBox(height: 5),
+            CalendarTimeline(
+              initialDate: _selectedDate,
+              firstDate: DateTime(2024, 1, 1),
+              lastDate: DateTime(2030, 12, 31),
+              onDateSelected: (date) {
+                setState(() {
+                  _selectedDate = date;
+                });
+              },
+              leftMargin: 5,
+              dayColor: Colors.black54,
+              activeDayColor: Colors.white,              
+              activeBackgroundDayColor: Colors.black,
+              dotColor: Colors.blue,
+              showYears: false,
+              height: 70,
+              fontSize: 12,
+              shrinkFontSize: 10,
+              dayNameFontSize: 10,
+              eventDates: eventDates,
+              locale: "it",
+            ),
+            const SizedBox(height: 10),
 
-      body: Column(
-        children: [
-          const SizedBox(height: 10),
-
-          /// --- CALENDRIER ---
-          CalendarTimeline(
-            initialDate: _selectedDate,
-            firstDate: DateTime(2024, 1, 1),
-            lastDate: DateTime(2030, 12, 31),
-            onDateSelected: (date) {
-              setState(() {
-                _selectedDate = date;
-              });
-            },
-            leftMargin: 30,
-            monthColor: Colors.black,
-            dayColor: Colors.black,
-            activeDayColor: Colors.white,
-            activeBackgroundDayColor: Colors.black,
-            dotColor: Colors.blue,
-            eventDates: events.keys.toList(),
-            locale: "it",
-          ),
-
-          const SizedBox(height: 20),
-
-          /// --- ZONE ÉVÉNEMENTS ---
-          Expanded(
-            child: Container(
-              width: double.infinity,
+            Padding(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-              ),
               child: _buildEvents(),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-
       backgroundColor: Colors.white,
-
-      /// --- NAVIGATION BAR ---
-  bottomNavigationBar: Container(
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: const BorderRadius.only(
-      topLeft: Radius.circular(25),
-      topRight: Radius.circular(25),
-    ),
-    boxShadow: [
-      BoxShadow(
-        color: Colors.black.withOpacity(0.15),
-        blurRadius: 20,
-        offset: const Offset(0, -10),
-      ),
-    ],
-  ),
-  child: ClipRRect(
-    borderRadius: const BorderRadius.only(
-      topLeft: Radius.circular(25),
-      topRight: Radius.circular(25),
-    ),
-    child: SlidingClippedNavBar(
-      backgroundColor: Colors.white,
-      onButtonPressed: (index) {
-        setState(() {
-          selectedIndex = index;
-        });
-
-        // --- NAVIGATION ---
-        switch (index) {
-          case 0:
-            Get.to(() => HomeScreen());
-
-            break;
-
-          case 1:
-            Get.to(() => CalendarPage());
-
-            break;
-
-          case 2:
-          Get.to(() => CampiList());
-            break;
-
-          case 3:
-            Get.to(() => ProfileScreen());
-
-            break;
-        }
-      },
-      iconSize: 32,
-      activeColor: Colors.black,
-      inactiveColor: Colors.grey,
-      selectedIndex: selectedIndex,
-      barItems:  [
-        BarItem(icon: Icons.home, title: 'Home'),
-        BarItem(icon: Icons.calendar_month_outlined, title: 'Events'),
-        BarItem(icon: Icons.search, title: 'Search'),
-        BarItem(icon: Icons.account_circle, title: 'Profil'),
-      ],
-    ),
-  ),
-),
+      bottomNavigationBar: _buildNavBar(),
     );
   }
 
-  /// --- AFFICHER LES EVENT DU JOUR ---
-  Widget _buildEvents() {
-    final dayEvents = events.entries
-        .where((e) =>
-            e.key.year == _selectedDate.year &&
-            e.key.month == _selectedDate.month &&
-            e.key.day == _selectedDate.day)
-        .map((e) => e.value)
-        .expand((i) => i)
-        .toList();
+  Widget _buildNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, -10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+        child: SlidingClippedNavBar(
+          backgroundColor: Colors.white,
+          onButtonPressed: (index) {
+            setState(() {
+              selectedIndex = index;
+            });
+            switch (index) {
+              case 0:
+                Get.to(() => HomeScreen());
+                break;
+              case 1:
+                Get.to(() => CalendarPage());
+                break;
+              case 2:
+                Get.to(() => CampiList());
+                break;
+              case 3:
+                Get.to(() => ProfileScreen());
+                break;
+            }
+          },
+          iconSize: 32,
+          activeColor: Colors.black,
+          inactiveColor: Colors.grey,
+          selectedIndex: selectedIndex,
+          barItems: [
+            BarItem(icon: Icons.home, title: 'Home'),
+            BarItem(icon: Icons.calendar_month_outlined, title: 'Events'),
+            BarItem(icon: Icons.search, title: 'Search'),
+            BarItem(icon: Icons.account_circle, title: 'Profil'),
+          ],
+        ),
+      ),
+    );
+  }
 
-    if (dayEvents.isEmpty) {
+  Widget _buildEvents() {
+    final dayReservations = _userReservations.where((r) {
+      final resDate = DateTime.parse(r.data);
+      return resDate.year == _selectedDate.year &&
+          resDate.month == _selectedDate.month &&
+          resDate.day == _selectedDate.day;
+    }).toList();
+
+    if (dayReservations.isEmpty) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -172,133 +171,100 @@ class _CalendarPageState extends State<CalendarPage> {
       );
     }
 
-    return ListView.builder(
-      itemCount: dayEvents.length,
-      itemBuilder: (context, index) {
-        return _EventSwipeCard(
-          title: dayEvents[index],
-          imageUrl:
-              "https://images.pexels.com/photos/399187/pexels-photo-399187.jpeg?auto=compress",
-          onCancel: () {
-            print("Event canceled: ${dayEvents[index]}");
-          },
-        );
-      },
+    return Column(
+      children: dayReservations
+          .map((res) => _ReservationCard(reservation: res))
+          .toList(),
     );
   }
 }
 
-///////////////////////////////////////////////////////////////////
-///              --- WIDGET : SWIPE CARD ---                   ///
-///////////////////////////////////////////////////////////////////
+class _ReservationCard extends StatelessWidget {
+  final Prenotazione reservation;
 
-class _EventSwipeCard extends StatelessWidget {
-  final String title;
-  final String imageUrl;
-  final Function() onCancel;
-
-  const _EventSwipeCard({
-    required this.title,
-    required this.imageUrl,
-    required this.onCancel,
-    super.key,
-  });
+  const _ReservationCard({required this.reservation, super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Dismissible(
-      key: UniqueKey(),
+    final reservationDateTime = DateTime.parse(reservation.data)
+        .add(_parseTime(reservation.ora));
+    final isPassed = reservationDateTime.isBefore(DateTime.now());
 
-      /// Swipe left only
-      direction: DismissDirection.endToStart,
-
-      /// Background red with text "Annulla"
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        margin: const EdgeInsets.only(bottom: 14),
-        decoration: BoxDecoration(
-          color: Colors.redAccent,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Text(
-          "Annulla",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-
-      /// Confirmation popup
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("Conferma"),
-            content: const Text("Vuoi annullare questa prenotazione?"),
-            actions: [
-              TextButton(
-                child: const Text("No"),
-                onPressed: () => Navigator.pop(context, false),
-              ),
-              TextButton(
-                child: const Text("Sì"),
-                onPressed: () => Navigator.pop(context, true),
-              ),
-            ],
-          ),
-        );
-      },
-
-      /// Action after dismiss
-      onDismissed: (direction) => onCancel(),
-
-      /// Main card
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 14),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 12,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-
-        child: Row(
+    return Card(
+      margin: const EdgeInsets.only(bottom: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Image
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                imageUrl,
-                width: 80,
-                height: 80,
+                reservation.campo != null && reservation.campo!.foto.isNotEmpty
+                    ? reservation.campo!.foto.first
+                    : "https://p.turbosquid.com/ts-thumb/hM/H8rGSK/EJ6PUsDS/1/png/1604002263/1920x1080/fit_q87/004626f535c9736df93f8b2bffc7b15fba66ec1b/1.jpg",
+                width: double.infinity,
+                height: 150,
                 fit: BoxFit.cover,
               ),
             ),
-
-            const SizedBox(width: 12),
-
-            /// Title
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+            const SizedBox(height: 10),
+            Text(
+              reservation.campo?.nome ?? 'Campo',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                _buildBadge(
+                  Icons.access_time,
+                  "${reservation.ora} • ${isPassed ? 'Passato' : 'Prossimo'}",
+                  isPassed,
                 ),
-              ),
+                _buildBadge(Icons.sports_soccer,
+                    reservation.campo?.tipo ?? 'Tipo sconosciuto', isPassed),
+                _buildBadge(Icons.euro, "${reservation.prezzo.toStringAsFixed(2)}€", isPassed),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Duration _parseTime(String hour) {
+    final parts = hour.split(":");
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    return Duration(hours: h, minutes: m);
+  }
+
+  Widget _buildBadge(IconData icon, String text, bool isPassed) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isPassed ? Colors.grey.shade300 : Colors.green.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.black),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: isPassed ? Colors.grey : Colors.green),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.black87,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }

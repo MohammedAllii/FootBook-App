@@ -7,42 +7,52 @@ class ReservationService {
 
   Future<Prenotazione?> getTodayNextReservation(int userId) async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/today-next-reservation'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/today-next-reservation?user_id=$userId'),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final reservations = data['reservations'] as List;
 
-        if (reservations.isEmpty) return null;
+        // Laravel renvoie: { status: true, reservation: {...} }
+        final reservationData = data['reservation'];
 
-        // Filtrer par utilisateur
-        final userReservations = reservations
-            .where((r) => r['user_id'] == userId)
-            .toList();
+        if (reservationData == null) {
+          return null;
+        }
 
-        if (userReservations.isEmpty) return null;
-
-        // Trier par heure et prendre la prochaine réservation
-        userReservations.sort((a, b) {
-          final dateTimeA = DateTime.parse("${a['data']} ${a['ora']}:00");
-          final dateTimeB = DateTime.parse("${b['data']} ${b['ora']}:00");
-          return dateTimeA.compareTo(dateTimeB);
-        });
-
-        final now = DateTime.now();
-        final nextReservation = userReservations.firstWhere(
-            (r) => DateTime.parse("${r['data']} ${r['ora']}:00").isAfter(now),
-            orElse: () => null); // orElse ne peut pas retourner null → on gère après
-
-        if (nextReservation == null) return null;
-
-        return Prenotazione.fromJson(nextReservation);
+        return Prenotazione.fromJson(reservationData);
       } else {
+        print("Erreur code: ${response.statusCode}");
         return null;
       }
     } catch (e) {
       print("Erreur API: $e");
       return null;
+    }
+  }
+
+    // --- récupérer toutes les réservations d'un utilisateur
+  Future<List<Prenotazione>> getUserReservations(int userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/user-reservations?user_id=$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List reservationsData = data['reservations'] ?? [];
+
+        return reservationsData
+            .map((r) => Prenotazione.fromJson(r))
+            .toList();
+      } else {
+        print("Erreur code: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("Erreur API: $e");
+      return [];
     }
   }
 }

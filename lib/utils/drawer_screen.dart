@@ -4,6 +4,10 @@ import 'package:footbookcamp/Services/AuthService.dart';
 import 'package:footbookcamp/auth/login_screen.dart';
 import 'package:cherry_toast/cherry_toast.dart';
 import 'package:cherry_toast/resources/arrays.dart';
+import 'package:footbookcamp/calendar/calendar_page.dart';
+import 'package:footbookcamp/campo/campi_list.dart';
+import 'package:footbookcamp/profile/edit_info.dart';
+import 'package:footbookcamp/profile/edit_profile_page.dart';
 
 class DrawerScreen extends StatefulWidget {
   final int selectedIndex;
@@ -169,28 +173,38 @@ class _DrawerScreenState extends State<DrawerScreen> {
               _drawerItem(
                 icon: Icons.calendar_month_outlined,
                 title: "Prenotazioni",
-                onTap: () {},
+                onTap: () {
+                    Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const CalendarPage()),
+                  );
+                },
               ),
 
               _drawerItem(
                 icon: Icons.sports_soccer,
                 title: "Campi",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) =>  CampiList()),
+                  );
+                },
               ),
 
               _drawerItem(
                 icon: Icons.person_outline,
                 title: "Profilo",
-                onTap: () {},
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  );
+                },
               ),
 
-              _drawerItem(
-                icon: Icons.settings_outlined,
-                title: "Impostazioni",
-                onTap: () {},
-              ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 40),
 
               // ---- LOGOUT ----
               _drawerItem(

@@ -30,6 +30,7 @@ class _HomeScreen extends State<HomeScreen> {
   late Future<List<Campo>> futureCampi;
   Prenotazione? _todayReservation;
 
+
   @override
   void initState() {
     super.initState();
@@ -65,48 +66,76 @@ class _HomeScreen extends State<HomeScreen> {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.asset(
-                "assets/stadium.jpg",
-                height: 100,
-                width: 100,
-                fit: BoxFit.cover,
-              ),
-            ),
+ClipRRect(
+  borderRadius: BorderRadius.circular(10),
+  child: reservation.campo?.foto != null &&
+          reservation.campo!.foto!.isNotEmpty
+      ? Image.network(
+          reservation.campo!.foto!.first,
+          height: 100,
+          width: 100,
+          fit: BoxFit.cover,
+        )
+      : Image.asset(
+          "assets/stadium.jpg",
+          height: 100,
+          width: 100,
+          fit: BoxFit.cover,
+        ),
+),
             const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Campo ID: ${reservation.campiId}",
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
+                  reservation.campo?.nome ?? "Campo",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                   ),
                   const SizedBox(height: 5),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 4),
+                        horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 98, 161, 129),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(color: Colors.black),
+                    ),
+                    child: Text(
+                      reservation.campo?.tipo ?? "5x5",
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 232, 248, 239),
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.black),
                     ),
                     child: Text(
                       "Oggi • ${reservation.ora}",
                       style: const TextStyle(
-                          color: Colors.white,
+                          color: Colors.black,
                           fontSize: 12,
-                          fontWeight: FontWeight.w500),
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     "Non dimenticare di portare con te l'attrezzatura necessaria e arrivare qualche minuto prima.",
                     style: TextStyle(
-                        color: Colors.black87,
+                        color: Colors.black87,                        
                         fontSize: 8,
-                        fontWeight: FontWeight.w500),
+                        fontWeight: FontWeight.bold),
                   ),
                 ],
               ),

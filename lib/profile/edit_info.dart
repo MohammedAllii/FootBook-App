@@ -20,7 +20,8 @@ class _EditInfoState extends State<EditInfo> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  bool _isLoading = false;
+  bool _isLoading = false; 
+  bool _isLoadingData = true; 
   String? avatar;
 
   @override
@@ -33,33 +34,35 @@ class _EditInfoState extends State<EditInfo> {
   // 🔄 Charger les infos utilisateur
   // ================================================================
   Future<void> _loadUserInfo() async {
-  try {
-    final user = await _authService.getUser();
-    if (user["error"] == true) {
-      throw Exception(user["message"]);
-    }
-    if (mounted) {
-      setState(() {
-        _nomeController.text = user["nome"] ?? "";
-        _cognomeController.text = user["cognome"] ?? "";
-        _emailController.text = user["email"] ?? "";
-        _telefonoController.text = user["telefono"] ?? "";
-        _indirizzoController.text = user["indirizzo"] ?? "";
-        _etaController.text = user["eta"]?.toString() ?? "";
-      });
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Errore nel caricamento dei dati: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+    try {
+      final user = await _authService.getUser();
+      if (user["error"] == true) {
+        throw Exception(user["message"]);
+      }
+      if (mounted) {
+        setState(() {
+          _nomeController.text = user["nome"] ?? "";
+          _cognomeController.text = user["cognome"] ?? "";
+          _emailController.text = user["email"] ?? "";
+          _telefonoController.text = user["telefono"] ?? "";
+          _indirizzoController.text = user["indirizzo"] ?? "";
+          _etaController.text = user["eta"]?.toString() ?? "";
+          avatar = user["avatar"]; // si tu as un avatar
+          _isLoadingData = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingData = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Errore nel caricamento dei dati: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
-}
-
 
   // ================================================================
   // 🔄 Mettre à jour le profil
@@ -82,20 +85,15 @@ class _EditInfoState extends State<EditInfo> {
       }
     }
 
-final data = {
-  if (_nomeController.text.isNotEmpty) "nome": _nomeController.text,
-  if (_cognomeController.text.isNotEmpty) "cognome": _cognomeController.text,
-  if (_emailController.text.isNotEmpty) "email": _emailController.text,
-  if (_telefonoController.text.isNotEmpty) "telefono": _telefonoController.text,
-  if (_indirizzoController.text.isNotEmpty) "indirizzo": _indirizzoController.text,
-  if (_etaController.text.isNotEmpty) "eta": int.tryParse(_etaController.text),
-  if (_passwordController.text.isNotEmpty) "password": _passwordController.text,
-};
-
-
-    if (_passwordController.text.isNotEmpty) {
-      data["password"] = _passwordController.text;
-    }
+    final data = {
+      if (_nomeController.text.isNotEmpty) "nome": _nomeController.text,
+      if (_cognomeController.text.isNotEmpty) "cognome": _cognomeController.text,
+      if (_emailController.text.isNotEmpty) "email": _emailController.text,
+      if (_telefonoController.text.isNotEmpty) "telefono": _telefonoController.text,
+      if (_indirizzoController.text.isNotEmpty) "indirizzo": _indirizzoController.text,
+      if (_etaController.text.isNotEmpty) "eta": int.tryParse(_etaController.text),
+      if (_passwordController.text.isNotEmpty) "password": _passwordController.text,
+    };
 
     try {
       final res = await _authService.updateProfile(data);
@@ -118,7 +116,7 @@ final data = {
         ),
       );
 
-      // Optionnel : recharger les données après update
+      // Recharger les données après update
       _loadUserInfo();
       _passwordController.clear();
       _confirmPasswordController.clear();
@@ -180,6 +178,21 @@ final data = {
   @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
+
+    // Loader pendant le chargement des données
+    if (_isLoadingData) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            "Profilo",
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -261,22 +274,17 @@ final data = {
 
             const SizedBox(height: 30),
 
-            // Nome + Cognome
+            // Inputs
             Row(
               children: [
                 Expanded(
                     child: _buildInput(_nomeController, "Nome", Icons.person)),
                 const SizedBox(width: 10),
                 Expanded(
-                    child:
-                        _buildInput(_cognomeController, "Cognome", Icons.person_outline)),
+                    child: _buildInput(_cognomeController, "Cognome", Icons.person_outline)),
               ],
             ),
-
-            // Email
             _buildInput(_emailController, "Email", Icons.email),
-
-            // Telefono + Età
             Row(
               children: [
                 Expanded(
@@ -288,14 +296,9 @@ final data = {
                         isNumber: true)),
               ],
             ),
-
-            // Indirizzo
             _buildInput(_indirizzoController, "Indirizzo", Icons.location_on),
-
-            // Password
             _buildInput(_passwordController, "Nuova Password", Icons.lock, obscure: true),
-            _buildInput(_confirmPasswordController, "Conferma Password", Icons.lock_outline,
-                obscure: true),
+            _buildInput(_confirmPasswordController, "Conferma Password", Icons.lock_outline, obscure: true),
 
             const SizedBox(height: 30),
 

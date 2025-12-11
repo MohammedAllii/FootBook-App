@@ -1,6 +1,10 @@
+import 'package:cherry_toast/cherry_toast.dart';
+import 'package:cherry_toast/resources/arrays.dart';
 import 'package:flutter/material.dart';
 import 'package:footbookcamp/Help/help_center.dart';
 import 'package:footbookcamp/Home/HomeScreen.dart';
+import 'package:footbookcamp/Services/AuthService.dart';
+import 'package:footbookcamp/auth/login_screen.dart';
 import 'package:footbookcamp/calendar/calendar_page.dart';
 import 'package:footbookcamp/campo/campi_list.dart';
 import 'package:footbookcamp/profile/edit_info.dart';
@@ -17,6 +21,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreen extends State<ProfileScreen> {
   int selectedIndex = 3;
     final PageController controller = PageController();
+      final AuthService _authService = AuthService();
 
 
   @override
@@ -25,6 +30,30 @@ class _ProfileScreen extends State<ProfileScreen> {
   }
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  void _logout() async {
+    try {
+      await _authService.logout();
+      CherryToast.success(
+        title: const Text("Logout avvenuto con successo"),
+        displayIcon: true,
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+
+      // Redirection vers LoginScreen
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    } catch (e) {
+      CherryToast.error(
+        title: Text("Errore durante il logout: $e"),
+        displayIcon: true,
+        animationType: AnimationType.fromLeft,
+      ).show(context);
+    }
+  }
 
   
 
