@@ -60,7 +60,6 @@ final campiFiltrati = (_categoriaSelezionata == "Tutti")
         final tipo = (campo.tipo ?? '').toString().toLowerCase();
         final cat  = (_categoriaSelezionata ?? '').toLowerCase();
 
-        // cas spécifiques : si la catégorie contient "5" on accepte tout ce qui parle de 5
         if (cat.contains('5')) {
           return tipo.contains('5') || tipo.contains('5x5') || tipo.contains('calcio a 5') || tipo.contains('5v5');
         }
@@ -71,7 +70,6 @@ final campiFiltrati = (_categoriaSelezionata == "Tutti")
           return tipo.contains('11') || tipo.contains('11x11') || tipo.contains('calcio a 11');
         }
 
-        // fallback : recherche partielle
         return tipo.contains(cat) || cat.contains(tipo);
       }).toList();
 
@@ -90,7 +88,6 @@ final campiFiltrati = (_categoriaSelezionata == "Tutti")
           ? const Center(child: CircularProgressIndicator(color: Colors.black))
           : Column(
               children: [
-                // Categories
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                   height: 70,

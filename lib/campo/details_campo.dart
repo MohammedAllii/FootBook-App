@@ -22,17 +22,14 @@ class DetailsCampo extends StatefulWidget {
 class _DetailsCampoState extends State<DetailsCampo>
     with TickerProviderStateMixin {
   final PageController _pageController = PageController(viewportFraction: 0.95);
-  int _currentPage = 0; // Commencer à 0, car les images sont dynamiques
+  int _currentPage = 0; 
   Timer? _carouselTimer;
 
   late final TabController _tabController;
 
-  // Utilisation de la note du Campo
   late double _rating; 
   final TextEditingController _commentController = TextEditingController();
 
-  // Les commentaires et événements restent statiques pour cet exemple, 
-  // car le modèle 'Campo' ne les contient pas.
   final List<Map<String, dynamic>> _comments = [
     {
       "name": "Marco",
@@ -61,10 +58,8 @@ class _DetailsCampoState extends State<DetailsCampo>
     },
   ];
 
-  // Les coordonnées sont maintenant dynamiques
   late final ll.LatLng _campoLatLng;
   
-  // Les images sont maintenant dynamiques
   late final List<String> _images;
 
   @override

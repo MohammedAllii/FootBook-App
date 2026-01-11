@@ -40,7 +40,6 @@ class _ProfileScreen extends State<ProfileScreen> {
         animationType: AnimationType.fromLeft,
       ).show(context);
 
-      // Redirection vers LoginScreen
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -176,12 +175,12 @@ class ProfilePicStatic extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.black, // 🔥 Bordure noire
+            color: Colors.black, 
             width: 3,
           ),
         ),
         child: const Padding(
-          padding: EdgeInsets.all(3), // espace entre bordure et image
+          padding: EdgeInsets.all(3),
           child: CircleAvatar(
             backgroundImage: AssetImage("assets/profile.png"),
             backgroundColor: Colors.transparent,

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:footbookcamp/Model/prenotazione_model.dart';
 
 class ReservationService {
-  final String baseUrl = "http://10.109.162.110:8000/api";
+  final String baseUrl = "http://10.166.105.110:8000/api";
 
   Future<Prenotazione?> getTodayNextReservation(int userId) async {
     try {

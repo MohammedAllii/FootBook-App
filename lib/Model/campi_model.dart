@@ -28,10 +28,7 @@ class Campo {
     required this.foto,
   });
 
-  // Factory method pour créer un objet Campo à partir d'un Map JSON
   factory Campo.fromJson(Map<String, dynamic> json) {
-    // Le JSON retourne recensione parfois comme un int (4) et parfois comme un double (4.5), 
-    // on s'assure qu'il est toujours traité comme un double.
     double recensioneValue;
     if (json['recensione'] is int) {
       recensioneValue = (json['recensione'] as int).toDouble();

@@ -67,7 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
           animationType: AnimationType.fromLeft,
         ).show(context);
 
-        // Naviguer vers HomeScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),

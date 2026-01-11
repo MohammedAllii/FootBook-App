@@ -36,7 +36,7 @@ class _PaymentPageState extends State<PaymentPage> {
 
   try {
     final response = await http.post(
-      Uri.parse("http://10.109.162.110:8000/api/create-payment-intent"),
+      Uri.parse("http://10.166.105.110:8000/api/create-payment-intent"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "campi_id": widget.campiId,

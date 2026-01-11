@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 // Récupération des variables globales de votre AuthService
 final storage = FlutterSecureStorage();
 // Assurez-vous que cette URL est correcte et accessible (attention à l'IP locale 10.65.206.110)
-final baseUrl = 'http://10.109.162.110:8000/api'; 
+final baseUrl = 'http://10.166.105.110:8000/api'; 
 
 class CampiService {
   

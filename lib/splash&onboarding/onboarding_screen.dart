@@ -21,14 +21,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       finishButtonText: "Inizia ora",
       onFinish: () async {
 await _authService.setOnboardingComplete(); 
-// 2. Vérifier si l'utilisateur est déjà connecté (si un jeton existe)
 final bool loggedIn = await _authService.isUserLoggedIn();
 
 if (loggedIn) {
- // Si connecté, naviguer directement vers HomeScreen
 Get.offAll(() => const HomeScreen());
 } else {
- // Sinon, naviguer vers WelcomeScreen pour se connecter/s'enregistrer
  Get.offAll(() =>  WelcomeScreen());
 }
       },
@@ -66,7 +63,7 @@ Get.offAll(() => const HomeScreen());
         Container(),
         Container(),
       ],
-      speed: 1.0, // Vitesse réduite pour une meilleure expérience
+      speed: 1.0, 
 
       pageBodies: [
         _buildPageBody(
@@ -102,7 +99,6 @@ Get.offAll(() => const HomeScreen());
     required String description,
     required String imagePath,
   }) {
-    // ... (Reste inchangé)
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenHeight = MediaQuery.of(context).size.height;

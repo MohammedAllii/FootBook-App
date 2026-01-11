@@ -116,7 +116,6 @@ class _EditInfoState extends State<EditInfo> {
         ),
       );
 
-      // Recharger les données après update
       _loadUserInfo();
       _passwordController.clear();
       _confirmPasswordController.clear();

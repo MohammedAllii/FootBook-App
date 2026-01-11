@@ -92,7 +92,6 @@ class _SignupScreenState extends State<SignupScreen> {
           animationType: AnimationType.fromLeft,
         ).show(context);
 
-        // Naviguer vers HomeScreen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -193,7 +192,6 @@ class _SignupScreenState extends State<SignupScreen> {
               padding: const EdgeInsets.all(25.0),
               child: Column(
                 children: [
-                  // Nome e Cognome su stessa linea
                   Row(
                     children: [
                       Expanded(child: buildInputField(_controllerNome, "Nome")),

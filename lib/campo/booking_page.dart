@@ -20,7 +20,7 @@ class _BookingPageState extends State<BookingPage> {
 
   Map<String, List<String>> bookedHoursPerDay = {};
   String? selectedHour;
-  bool isLoading = true; // Flag per controllo caricamento
+  bool isLoading = true; 
 
   List<String> get hours {
     List<String> result = [];
@@ -53,11 +53,11 @@ class _BookingPageState extends State<BookingPage> {
 
   Future<void> fetchBookedHours(DateTime date) async {
     setState(() {
-      isLoading = true; // Inizio caricamento
+      isLoading = true; 
     });
 
     final url =
-        "http://10.109.162.110:8000/api/booked-hours?campi_id=${campo.id}&data=${date.toIso8601String().substring(0, 10)}";
+        "http://10.166.105.110:8000/api/booked-hours?campi_id=${campo.id}&data=${date.toIso8601String().substring(0, 10)}";
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -68,7 +68,7 @@ class _BookingPageState extends State<BookingPage> {
                   "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}"] =
               List<String>.from(data['booked_hours']);
           selectedHour = null;
-          isLoading = false; // Fine caricamento
+          isLoading = false;
         });
       } else {
         setState(() {

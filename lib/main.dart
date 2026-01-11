@@ -7,7 +7,6 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  //1) Mettre ici votre clé STRIPE PUBLISHABLE KEY
   Stripe.publishableKey =
       "pk_test_51Sc4LRHLl5lQQENmHkUyRzCGQK6o3OKM7oGYKP6ugXkBGNEdTNPPygGgXuRcwxnrFEWOK0R9BetlZfn9xMB50uIC00Xcw2dhue";
 
