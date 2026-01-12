@@ -22,8 +22,14 @@ e progettata per essere semplice e veloce.
 
 ## Screenshot
 
-![Login](screenshots/login_small.png) ![Home](screenshots/home_small.png) ![Camp](screenshots/camp_small.png)
+### Schermata di Login
+![Login](screenshots/login.png)
 
+### Schermata Principale
+![Home](screenshots/home.png)
+
+### Schermata di Camp 
+![Camp](screenshots/camp.png)
 
 ### Schermata di Mappa 
 ![Mappa](screenshots/mappa.png)
