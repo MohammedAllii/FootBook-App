@@ -23,16 +23,16 @@ e progettata per essere semplice e veloce.
 ## Screenshot
 
 ### Schermata di Login
-![Login](screenshots/login.png){width=200px}
+![Login](screenshots/login.png)
 
 ### Schermata Principale
-![Home](screenshots/home.png){width=200px}
+![Home](screenshots/home.png)
 
 ### Schermata di Camp 
-![Camp](screenshots/camp.png){width=200px}
+![Camp](screenshots/camp.png)
 
 ### Schermata di Mappa 
-![Mappa](screenshots/mappa.png){width=200px}
+![Mappa](screenshots/mappa.png)
 
 ## Tecnologie Utilizzate
 - Flutter e Dart per lo sviluppo dell’applicazione mobile
