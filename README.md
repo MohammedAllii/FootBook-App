@@ -1,17 +1,46 @@
-# footbookcamp
+# FootBook
 
-A new Flutter project.
+## Informazioni Studente
+- Nome: Mejri Mohamed Ali  
+- Matricola: 343329
 
-## Getting Started
+## Titolo del Progetto
+FootBook – Applicazione mobile per la prenotazione dei campi da calcio
 
-This project is a starting point for a Flutter application.
+## Descrizione del Progetto
+FootBook è un’applicazione mobile progettata per semplificare la prenotazione dei campi
+da calcio. L’app consente agli utenti di visualizzare la disponibilità dei campi,
+selezionare data e ora, prenotare un campo e completare il pagamento online tramite
+un’interfaccia semplice e intuitiva.
 
-A few resources to get you started if this is your first Flutter project:
+## Esperienza Utente
+L’utente accede all’app tramite login o registrazione. Dopo l’autenticazione, può
+consultare l’elenco dei campi disponibili e verificarne la disponibilità attraverso
+un calendario chiaro e intuitivo. Una volta selezionati campo, data e ora, la
+prenotazione viene confermata tramite pagamento online. L’esperienza utente è fluida
+e progettata per essere semplice e veloce.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Screenshot
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Schermata di Login
+![Login](screenshots/login.png)
+
+### Schermata Principale
+![Home](screenshots/home.png)
+
+### Schermata di Camp 
+![Camp](screenshots/camp.png)
+
+### Schermata di Mappa 
+![Mappa](screenshots/mappa.png)
+
+## Tecnologie Utilizzate
+- Flutter e Dart per lo sviluppo dell’applicazione mobile
+- API REST per la comunicazione con il backend
+- Laravel per il backend e la gestione dei dati
+- Sistema di pagamento online
+- Git e GitHub per il controllo di versione
+
+Sono stati utilizzati specifici pacchetti Flutter per la gestione della navigazione,
+dell’interfaccia utente e delle richieste HTTP. L’applicazione comunica con un server
+remoto per recuperare i dati di disponibilità e gestire le prenotazioni. Durante lo
